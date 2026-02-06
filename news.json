@@ -1,0 +1,288 @@
+{
+  "name": "news",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "40b4b98e-cc05-4f12-a40a-3436430316de",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "99f6640a-d416-4290-83f4-32914f499d6b",
+              "leftValue": "={{ $json.categories[0] }}",
+              "rightValue": "=AI",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "d7a5e0e6-ff75-4d3c-a302-4942b2285f0f",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "sendTo": "teechinyean@gmail.com",
+        "subject": "Today News",
+        "message": "={{ $json.content.parts[0].text}}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        -16
+      ],
+      "id": "268cbeb6-aabd-4c88-8880-679718c82489",
+      "name": "Send a message",
+      "webhookId": "a8d5121b-c782-406c-9283-92b50a9275df",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1OISUkPzgQ45KfZC",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "title"
+            },
+            {
+              "fieldToAggregate": "guid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -16
+      ],
+      "id": "57d38cb2-1b89-42cf-b083-f59cfc4e1831",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6526946-8080-4cdd-9fca-c42e78c252c3",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "7ce12c6b-52ea-4f40-995a-dfd3ba6af213",
+              "name": "guid",
+              "value": "={{ $json.guid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        -16
+      ],
+      "id": "a94d5f26-86e4-461a-85f2-b78479ff3ac4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": " rewrites content line by line, leaves a blank line between lines, and formats everything in a beautiful HTML card design using CSS for phone—with no keys like title: or guid:. Translate to chinese",
+              "role": "model"
+            },
+            {
+              "content": "={{ $json.title }}{{ $json.guid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -16
+      ],
+      "id": "c3bbe2ed-b690-4df8-aa6d-744514add2fc",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QouxmxjiteGl1E7H",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Filter & Combine\n",
+        "height": 192,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -48
+      ],
+      "id": "e1c7a790-fdfb-4ff4-9524-82238fb51655",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2,
+              "triggerAtMinute": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -16
+      ],
+      "id": "3005276e-6bfd-4252-b7d2-86531940fad3",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kuala_Lumpur",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "38697171-d353-4cfc-ab4d-44effdcf6c64",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "add62c6834af121e73a18d4dbc8fd6698de4faf81a123fe25f19e47fc492ac8e"
+  },
+  "id": "2tjIYmRh3W6r3333",
+  "tags": []
+}

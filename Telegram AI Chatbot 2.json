@@ -1,0 +1,1129 @@
+{
+  "name": "Telegram AI Chatbot 2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "id": "ea71a467-a646-4aca-b72e-cef1249c74e2",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        368,
+        240
+      ],
+      "webhookId": "51942fbb-ca0e-4ec4-9423-5fcc7d3c4281",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "SbHSPw1FEgMhtWft",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.message?.text }}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "notStartsWith",
+              "value2": "/"
+            },
+            {
+              "operation": "startsWith",
+              "value2": "/start",
+              "output": 1
+            },
+            {
+              "operation": "startsWith",
+              "value2": "=/image ",
+              "output": 2
+            },
+            {
+              "operation": "startsWith",
+              "value2": "/news",
+              "output": 3
+            }
+          ]
+        }
+      },
+      "id": "1cbe43d4-ea8b-4178-bc10-4bfad7abe143",
+      "name": "CheckCommand",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1328,
+        272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "model_temperature",
+              "value": 0.8
+            },
+            {
+              "name": "token_length",
+              "value": 500
+            }
+          ],
+          "string": [
+            {
+              "name": "system_command",
+              "value": "=You are a friendly chatbot. User name is {{ $json?.message?.from?.first_name }}. User system language is {{ $json?.message?.from?.language_code }}. provide your reply in chinese language unless user ask for change language. shortest answer\n\n"
+            },
+            {
+              "name": "bot_typing",
+              "value": "={{ $json?.message?.text.startsWith('/image') ? \"upload_photo\" : \"typing\" }}"
+            },
+            {
+              "name": "bot_typing1",
+              "value": "={{ $json?.message?.text.startsWith('/news') ? \"news\" : \"typing\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2aa961b8-f0af-4d5c-a6af-1be56ea4b2e6",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        736,
+        240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Chatbot mode by default\n### (when no command is provided)",
+        "height": 505,
+        "width": 379
+      },
+      "id": "2d2fe268-1e3e-483b-847c-4412e586c1ca",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1376,
+        -432
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Settings').first().json.message.from.id }}",
+        "text": "={{ $json.output}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "20c2e7fa-5d65-441b-8d1d-a8d46c624964",
+      "name": "Text reply",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2256,
+        -352
+      ],
+      "typeVersion": 1,
+      "webhookId": "f4fece06-f4db-444c-8048-4b754946e672",
+      "credentials": {
+        "telegramApi": {
+          "id": "SbHSPw1FEgMhtWft",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $json.message.from.id }}",
+        "action": "={{ $json.bot_typing || $json.bot_typing1}}"
+      },
+      "id": "30321276-ebe1-41ac-b420-9dab8daa405b",
+      "name": "Send Typing action",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        928,
+        304
+      ],
+      "typeVersion": 1,
+      "webhookId": "f8b6f3fa-3d6f-41ae-93f9-70daab8f3ccf",
+      "credentials": {
+        "telegramApi": {
+          "id": "SbHSPw1FEgMhtWft",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "id": "7d7ff2e8-b0ca-4638-a056-f7b4e2e6273d",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1152,
+        256
+      ],
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "content": "## Create an image\n### /image + request",
+        "height": 234,
+        "width": 298
+      },
+      "id": "656bab5e-b7f7-47a1-8e75-4a17d2070290",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Settings').first().json.message.from.id }}",
+        "binaryData": true,
+        "binaryPropertyName": "=data",
+        "additionalFields": {}
+      },
+      "id": "125e27d2-b03b-4f02-9dd1-8fc81ecf0b6b",
+      "name": "Send image",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2048,
+        272
+      ],
+      "typeVersion": 1,
+      "webhookId": "3be81219-81b2-442d-b4dc-5ef077e47648",
+      "credentials": {
+        "telegramApi": {
+          "id": "SbHSPw1FEgMhtWft",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message.text",
+              "value": "={{ $json?.message?.text || \"\" }}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "730a51ac-223e-4956-be7f-166eadb6ed81",
+      "name": "PreProcessing",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        560,
+        240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash-exp-image-generation",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash-exp-image-generation"
+        },
+        "prompt": "={{ $json.message.text.split(' ').slice(1).join(' ') }}",
+        "options": {
+          "sampleCount": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        272
+      ],
+      "id": "33151629-e936-42fc-8e55-00ed9dc0221a",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QouxmxjiteGl1E7H",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Settings').first().json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1536,
+        -48
+      ],
+      "id": "e816ea15-de41-4beb-8c58-96df5a6db2fc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": "={{ $json.token_length }}",
+          "temperature": "={{ $json.model_temperature }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -48
+      ],
+      "id": "e427fe14-bc43-4554-9098-3b77aa3e4436",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QouxmxjiteGl1E7H",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }} ",
+        "options": {
+          "systemMessage": "={{ $json.system_command }}\n\n\n#calender\n现在的时间是{{ $now }}.\n创建活动预设时间是1小时， 设定闹钟在30分钟和1天前，返回event id。确认活动没与其他活动冲突。更新活动前先获得原先资料，再做更新。删除活动按照原先的event id 作删除。\n\n#new user\nwhen new user type /start, Please welcome a new user in `{{ $json.message.from.language_code }}` language.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        -352
+      ],
+      "id": "b44beed6-7edd-4f5c-ae46-4f1cbb977c21",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        1536,
+        624
+      ],
+      "id": "bbfb133b-321d-4244-92c7-ccb97ca7b189",
+      "name": "technologiesreview"
+    },
+    {
+      "parameters": {
+        "url": "https://the-decoder.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        1536,
+        480
+      ],
+      "id": "a3c094dd-fa4d-4783-960a-58d08af1c5ec",
+      "name": "The-decoder"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6526946-8080-4cdd-9fca-c42e78c252c3",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "7ce12c6b-52ea-4f40-995a-dfd3ba6af213",
+              "name": "guid",
+              "value": "={{ $json.guid }}",
+              "type": "string"
+            },
+            {
+              "id": "befa79ae-f22f-430e-9575-ed2afaea4a31",
+              "name": "categories[0]",
+              "value": "={{ $json.categories[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        624
+      ],
+      "id": "3c2076d2-1570-476a-a617-fce1f21d8024",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6526946-8080-4cdd-9fca-c42e78c252c3",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "7ce12c6b-52ea-4f40-995a-dfd3ba6af213",
+              "name": "guid",
+              "value": "={{ $json.guid }}",
+              "type": "string"
+            },
+            {
+              "id": "d83b696d-9f35-4583-913f-088e55f41e72",
+              "name": "categories[1]",
+              "value": "={{ $json.categories[1] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        480
+      ],
+      "id": "995b88bd-88af-4469-994f-3b093e14fa73",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b71d5dd5-c322-47df-9452-5bb7b5e4a080",
+              "leftValue": "={{ $json.categories[0] }}",
+              "rightValue": "=Artificial intelligence",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        2128,
+        544
+      ],
+      "id": "e0e7586b-5195-4fc5-986c-23da07bf3a58",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "title"
+            },
+            {
+              "fieldToAggregate": "guid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        544
+      ],
+      "id": "8162c67d-6f71-40fe-aa25-6d4040f2b427",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1952,
+        544
+      ],
+      "id": "c999bea1-50f0-4b3b-b732-8cf02213ae2b",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "I've received news articles via RSS. Please analyze them and provide a concise summary of the top 3 to 5 main highlights. My goal is to get a quick overview of what's most relevant in these articles.",
+              "role": "model"
+            },
+            {
+              "content": "={{ $json.title }}{{ $json.guid }}  provide the link and put behind each news and translate each news to chinese\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2592,
+        544
+      ],
+      "id": "d7262b4d-aeba-4c84-ac4f-36268287a6be",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QouxmxjiteGl1E7H",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "NEWS\n/news",
+        "height": 320,
+        "width": 1056
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        448
+      ],
+      "id": "2fa5e00a-4858-446f-abf0-496f4da5ce6f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "chatId": "1157339098",
+        "text": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2976,
+        544
+      ],
+      "id": "cfef2f5f-1a4f-4057-8811-cb84553b0bb7",
+      "name": "news",
+      "webhookId": "0b5a0005-d83e-49c9-8f4f-9e7d6ddf8167",
+      "credentials": {
+        "telegramApi": {
+          "id": "SbHSPw1FEgMhtWft",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "teechinyean@gmail.com",
+          "mode": "list",
+          "cachedResultName": "teechinyean@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1824,
+        -96
+      ],
+      "id": "99c63276-8dbd-49ff-946f-3c155d28abd5",
+      "name": "create",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "94Derwd61tjqyoEz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "teechinyean@gmail.com",
+          "mode": "list",
+          "cachedResultName": "teechinyean@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1920,
+        -96
+      ],
+      "id": "2bf78c8f-f9f7-447e-9ced-50aaf511d75d",
+      "name": "delete",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "94Derwd61tjqyoEz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "teechinyean@gmail.com",
+          "mode": "list",
+          "cachedResultName": "teechinyean@gmail.com"
+        },
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {
+          "timeZone": {
+            "__rl": true,
+            "value": "Asia/Kuala_Lumpur",
+            "mode": "list",
+            "cachedResultName": "Asia/Kuala_Lumpur"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2016,
+        -96
+      ],
+      "id": "15cb2cb2-9cca-42c7-89af-91ec1c68b35c",
+      "name": "get",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "94Derwd61tjqyoEz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "bccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('BCC', ``, 'string') }}",
+          "ccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CC', ``, 'string') }}",
+          "replyTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Send_Replies_To', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        80
+      ],
+      "id": "2f291885-ae51-4f6a-a709-b0a7bed9ba44",
+      "name": "draft",
+      "webhookId": "84e62fc8-b99e-42ac-814c-f7f7ae3c40f8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1OISUkPzgQ45KfZC",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "bccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('BCC', ``, 'string') }}",
+          "ccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CC', ``, 'string') }}",
+          "replyTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Send_Replies_To', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        80
+      ],
+      "id": "44fd5b4b-43d1-4186-bbe6-cc4075c1626e",
+      "name": "send",
+      "webhookId": "84e62fc8-b99e-42ac-814c-f7f7ae3c40f8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1OISUkPzgQ45KfZC",
+          "name": "Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Calender",
+        "height": 169,
+        "width": 395,
+        "color": 5
+      },
+      "id": "b844818e-dbfc-47c5-a0f8-a665e59cae8d",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1808,
+        -128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Gmail",
+        "height": 169,
+        "width": 315,
+        "color": 3
+      },
+      "id": "717a4d89-0125-4955-84d4-11bd7d094872",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1808,
+        48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "teechinyean@gmail.com",
+          "mode": "list",
+          "cachedResultName": "teechinyean@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {
+          "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2112,
+        -96
+      ],
+      "id": "ff4cc4f5-f495-4e07-bfbc-a48ff46afa8c",
+      "name": "update",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "94Derwd61tjqyoEz",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        96
+      ],
+      "id": "1a6a3f22-8308-401e-bce0-a0f6bd775538",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "xIlWD8cvnjOwieyy",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Wed Search",
+        "height": 176,
+        "width": 256,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        48
+      ],
+      "id": "d17261bb-143d-429a-8962-899214ba253f",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "CheckCommand",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Send Typing action",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckCommand": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "The-decoder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "technologiesreview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PreProcessing": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "PreProcessing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Typing action": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Send image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Text reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "technologiesreview": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "The-decoder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "news",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "draft": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Asia/Kuala_Lumpur",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v0"
+  },
+  "versionId": "78f464da-f942-40b1-8922-f357616c0468",
+  "meta": {
+    "templateId": "1934",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "add62c6834af121e73a18d4dbc8fd6698de4faf81a123fe25f19e47fc492ac8e"
+  },
+  "id": "KyAW3P9ugzRMznRZ",
+  "tags": []
+}
